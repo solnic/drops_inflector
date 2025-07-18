@@ -9,9 +9,6 @@ Inflection utils for Elixir.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `drops_inflector` to your list of dependencies in `mix.exs`:
-
 ```elixir
 def deps do
   [
@@ -19,6 +16,10 @@ def deps do
   ]
 end
 ```
+
+## Links
+
+- [Documentation](https://hexdocs.pm/drops_inflector)
 
 ## Basic Usage
 
@@ -63,7 +64,7 @@ Drops.Inflector.uncountable?("book")        # => false
 
 ## Custom Inflectors
 
-You can create custom inflector modules with specific rules using the `__using__` macro. Custom rules take precedence over default rules:
+You can create custom inflector modules with specific rules using the `use` macro. Custom rules take precedence over default rules:
 
 ```elixir
 defmodule MyInflector do
@@ -148,7 +149,4 @@ TechInflector.pluralize("server")      # => "servers"
 TechInflector.uncountable?("software") # => true
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/drops_inflector>.
 
