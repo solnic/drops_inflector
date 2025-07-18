@@ -7,16 +7,16 @@ defmodule Drops.InflectorTest do
   describe "camelize_lower/1" do
     test "converts snake_case to camelCase" do
       assert Inflector.camelize_lower("data_mapper") == "dataMapper"
-      assert Inflector.camelize_lower("dry_inflector") == "dryInflector"
+      assert Inflector.camelize_lower("drops_inflector") == "dropsInflector"
       assert Inflector.camelize_lower("user_name") == "userName"
     end
 
     test "handles dashes" do
-      assert Inflector.camelize_lower("dry-inflector") == "dryInflector"
+      assert Inflector.camelize_lower("drops-inflector") == "dropsInflector"
     end
 
     test "handles paths" do
-      assert Inflector.camelize_lower("dry/inflector") == "dry::Inflector"
+      assert Inflector.camelize_lower("drops/inflector") == "drops::Inflector"
     end
 
     test "accepts atoms" do
@@ -27,16 +27,16 @@ defmodule Drops.InflectorTest do
   describe "camelize_upper/1" do
     test "converts snake_case to PascalCase" do
       assert Inflector.camelize_upper("data_mapper") == "DataMapper"
-      assert Inflector.camelize_upper("dry_inflector") == "DryInflector"
+      assert Inflector.camelize_upper("drops_inflector") == "DropsInflector"
       assert Inflector.camelize_upper("user_name") == "UserName"
     end
 
     test "handles dashes" do
-      assert Inflector.camelize_upper("dry-inflector") == "DryInflector"
+      assert Inflector.camelize_upper("drops-inflector") == "DropsInflector"
     end
 
     test "handles paths" do
-      assert Inflector.camelize_upper("dry/inflector") == "Dry::Inflector"
+      assert Inflector.camelize_upper("drops/inflector") == "Drops::Inflector"
     end
 
     test "accepts atoms" do
@@ -83,30 +83,30 @@ defmodule Drops.InflectorTest do
 
   describe "dasherize/1" do
     test "converts underscores to dashes" do
-      assert Inflector.dasherize("dry_inflector") == "dry-inflector"
+      assert Inflector.dasherize("drops_inflector") == "drops-inflector"
       assert Inflector.dasherize("user_name") == "user-name"
     end
 
     test "accepts atoms" do
-      assert Inflector.dasherize(:dry_inflector) == "dry-inflector"
+      assert Inflector.dasherize(:drops_inflector) == "drops-inflector"
     end
   end
 
   describe "demodulize/1" do
     test "extracts the last part of a module name" do
-      assert Inflector.demodulize("Dry::Inflector") == "Inflector"
+      assert Inflector.demodulize("Drops::Inflector") == "Inflector"
       assert Inflector.demodulize("String") == "String"
       assert Inflector.demodulize("Admin::User") == "User"
     end
 
     test "accepts atoms" do
-      assert Inflector.demodulize(:"Dry::Inflector") == "Inflector"
+      assert Inflector.demodulize(:"Drops::Inflector") == "Inflector"
     end
   end
 
   describe "humanize/1" do
     test "converts snake_case to human readable" do
-      assert Inflector.humanize("dry_inflector") == "Dry inflector"
+      assert Inflector.humanize("drops_inflector") == "Drops inflector"
       assert Inflector.humanize("user_name") == "User name"
     end
 
@@ -116,7 +116,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "accepts atoms" do
-      assert Inflector.humanize(:dry_inflector) == "Dry inflector"
+      assert Inflector.humanize(:drops_inflector) == "Drops inflector"
     end
   end
 
@@ -240,16 +240,16 @@ defmodule Drops.InflectorTest do
   describe "underscore/1" do
     test "converts CamelCase to snake_case" do
       assert Inflector.underscore("DataMapper") == "data_mapper"
-      assert Inflector.underscore("DryInflector") == "dry_inflector"
+      assert Inflector.underscore("DropsInflector") == "drops_inflector"
       assert Inflector.underscore("UserName") == "user_name"
     end
 
     test "handles dashes" do
-      assert Inflector.underscore("dry-inflector") == "dry_inflector"
+      assert Inflector.underscore("drops-inflector") == "drops_inflector"
     end
 
     test "handles paths" do
-      assert Inflector.underscore("Dry::Inflector") == "dry/inflector"
+      assert Inflector.underscore("Drops::Inflector") == "drops/inflector"
     end
 
     test "accepts atoms" do

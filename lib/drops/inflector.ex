@@ -6,6 +6,54 @@ defmodule Drops.Inflector do
   including pluralization, singularization, camelization, and more.
 
   Based on the dry-inflector Ruby library.
+
+  ## Configuration
+
+  You can create custom inflector modules with specific configuration using the `__using__` macro:
+
+      defmodule MyInflector do
+        use Drops.Inflector,
+          plural: [
+            {"virus", "viruses"},
+            {"octopus", "octopi"}
+          ],
+          singular: [
+            {"thieves", "thief"},
+            {"octopi", "octopus"}
+          ],
+          uncountable: [
+            "drops-inflector",
+            "equipment"
+          ]
+      end
+
+      MyInflector.pluralize("virus")     # => "viruses"
+      MyInflector.singularize("thieves") # => "thief"
+      MyInflector.uncountable?("equipment") # => true
+
+  Custom inflectors have all the same functions as the main `Drops.Inflector` module,
+  but use your custom rules in addition to the default rules. Custom rules take
+  precedence over default rules.
+
+  ## Available Functions
+
+  All inflector modules (both the main module and custom ones) provide these functions:
+
+  - `camelize_lower/1` - Lower camelCase
+  - `camelize_upper/1` - Upper CamelCase
+  - `camelize/1` - Alias for `camelize_upper/1`
+  - `constantize/1` - Convert string to module constant
+  - `classify/1` - Convert to class name
+  - `dasherize/1` - Convert underscores to dashes
+  - `demodulize/1` - Extract last part of module name
+  - `humanize/1` - Convert to human-readable form
+  - `foreign_key/1` - Create foreign key name
+  - `ordinalize/1` - Convert number to ordinal
+  - `pluralize/1` - Convert to plural form
+  - `singularize/1` - Convert to singular form
+  - `tableize/1` - Convert to table name
+  - `underscore/1` - Convert to snake_case
+  - `uncountable?/1` - Check if word is uncountable
   """
 
   alias Drops.Inflector.Inflections
@@ -20,6 +68,134 @@ defmodule Drops.Inflector do
   end
 
   @doc """
+  Macro for creating custom inflector modules with specific configuration.
+
+  ## Examples
+
+      defmodule MyInflector do
+        use Drops.Inflector,
+          plural: [
+            {"virus", "viruses"}
+          ],
+          singular: [
+            {"thieves", "thief"}
+          ],
+          uncountable: [
+            "drops-inflector"
+          ]
+      end
+
+      MyInflector.pluralize("virus") # => "viruses"
+  """
+  defmacro __using__(opts) do
+    quote do
+      @inflections_config unquote(opts)
+
+      # Build custom inflections at runtime with caching
+      defp custom_inflections do
+        case Process.get({__MODULE__, :custom_inflections}) do
+          nil ->
+            inflections = Drops.Inflector.build_custom_inflections(@inflections_config)
+            Process.put({__MODULE__, :custom_inflections}, inflections)
+            inflections
+
+          cached_inflections ->
+            cached_inflections
+        end
+      end
+
+      # Define all public functions that delegate to Drops.Inflector with custom inflections
+      def camelize_lower(input) do
+        Drops.Inflector.camelize_lower(input, inflections: custom_inflections())
+      end
+
+      def camelize_upper(input) do
+        Drops.Inflector.camelize_upper(input, inflections: custom_inflections())
+      end
+
+      def camelize(input) do
+        Drops.Inflector.camelize(input, inflections: custom_inflections())
+      end
+
+      def constantize(input) do
+        Drops.Inflector.constantize(input, inflections: custom_inflections())
+      end
+
+      def classify(input) do
+        Drops.Inflector.classify(input, inflections: custom_inflections())
+      end
+
+      def dasherize(input) do
+        Drops.Inflector.dasherize(input, inflections: custom_inflections())
+      end
+
+      def demodulize(input) do
+        Drops.Inflector.demodulize(input, inflections: custom_inflections())
+      end
+
+      def humanize(input) do
+        Drops.Inflector.humanize(input, inflections: custom_inflections())
+      end
+
+      def foreign_key(input) do
+        Drops.Inflector.foreign_key(input, inflections: custom_inflections())
+      end
+
+      def ordinalize(number) do
+        Drops.Inflector.ordinalize(number, inflections: custom_inflections())
+      end
+
+      def pluralize(input) do
+        Drops.Inflector.pluralize(input, inflections: custom_inflections())
+      end
+
+      def singularize(input) do
+        Drops.Inflector.singularize(input, inflections: custom_inflections())
+      end
+
+      def tableize(input) do
+        Drops.Inflector.tableize(input, inflections: custom_inflections())
+      end
+
+      def underscore(input) do
+        Drops.Inflector.underscore(input, inflections: custom_inflections())
+      end
+
+      def uncountable?(input) do
+        Drops.Inflector.uncountable?(input, inflections: custom_inflections())
+      end
+    end
+  end
+
+  @doc """
+  Builds custom inflections from configuration options.
+  """
+  def build_custom_inflections(opts) do
+    inflections = Inflections.new()
+
+    inflections
+    |> apply_custom_plurals(Keyword.get(opts, :plural, []))
+    |> apply_custom_singulars(Keyword.get(opts, :singular, []))
+    |> apply_custom_uncountables(Keyword.get(opts, :uncountable, []))
+  end
+
+  defp apply_custom_plurals(inflections, plurals) do
+    Enum.reduce(plurals, inflections, fn {singular, plural}, acc ->
+      Inflections.plural(acc, singular, plural)
+    end)
+  end
+
+  defp apply_custom_singulars(inflections, singulars) do
+    Enum.reduce(singulars, inflections, fn {plural, singular}, acc ->
+      Inflections.singular(acc, plural, singular)
+    end)
+  end
+
+  defp apply_custom_uncountables(inflections, uncountables) do
+    Inflections.uncountable(inflections, uncountables)
+  end
+
+  @doc """
   Lower camelize a string.
 
   ## Examples
@@ -27,12 +203,13 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.camelize_lower("data_mapper")
       "dataMapper"
 
-      iex> Drops.Inflector.camelize_lower("dry/inflector")
-      "dry::Inflector"
+      iex> Drops.Inflector.camelize_lower("drops/inflector")
+      "drops::Inflector"
   """
-  @spec camelize_lower(String.t() | atom()) :: String.t()
-  def camelize_lower(input) do
-    internal_camelize(to_string(input), false)
+  @spec camelize_lower(String.t() | atom(), keyword()) :: String.t()
+  def camelize_lower(input, opts \\ []) do
+    inflections = Keyword.get(opts, :inflections, inflections())
+    internal_camelize(to_string(input), false, inflections)
   end
 
   @doc """
@@ -43,19 +220,20 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.camelize_upper("data_mapper")
       "DataMapper"
 
-      iex> Drops.Inflector.camelize_upper("dry/inflector")
-      "Dry::Inflector"
+      iex> Drops.Inflector.camelize_upper("drops/inflector")
+      "Drops::Inflector"
   """
-  @spec camelize_upper(String.t() | atom()) :: String.t()
-  def camelize_upper(input) do
-    internal_camelize(to_string(input), true)
+  @spec camelize_upper(String.t() | atom(), keyword()) :: String.t()
+  def camelize_upper(input, opts \\ []) do
+    inflections = Keyword.get(opts, :inflections, inflections())
+    internal_camelize(to_string(input), true, inflections)
   end
 
   @doc """
   Alias for camelize_upper/1.
   """
-  @spec camelize(String.t() | atom()) :: String.t()
-  def camelize(input), do: camelize_upper(input)
+  @spec camelize(String.t() | atom(), keyword()) :: String.t()
+  def camelize(input, opts \\ []), do: camelize_upper(input, opts)
 
   @doc """
   Find a constant with the name specified in the argument string.
@@ -68,8 +246,9 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.constantize("Enum")
       Enum
   """
-  @spec constantize(String.t() | atom()) :: module()
-  def constantize(input) do
+  @spec constantize(String.t() | atom(), keyword()) :: module()
+  def constantize(input, _opts \\ []) do
+    # constantize doesn't use inflections, but we keep the interface consistent
     input
     |> to_string()
     |> String.split("::")
@@ -88,14 +267,14 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.classify("admin.users")
       "User"
   """
-  @spec classify(String.t() | atom()) :: String.t()
-  def classify(input) do
+  @spec classify(String.t() | atom(), keyword()) :: String.t()
+  def classify(input, opts \\ []) do
     input
     |> to_string()
     |> String.split(".")
     |> List.last()
-    |> singularize()
-    |> camelize()
+    |> singularize(opts)
+    |> camelize(opts)
   end
 
   @doc """
@@ -103,11 +282,11 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.dasherize("dry_inflector")
-      "dry-inflector"
+      iex> Drops.Inflector.dasherize("drops_inflector")
+      "drops-inflector"
   """
-  @spec dasherize(String.t() | atom()) :: String.t()
-  def dasherize(input) do
+  @spec dasherize(String.t() | atom(), keyword()) :: String.t()
+  def dasherize(input, _opts \\ []) do
     input
     |> to_string()
     |> String.replace("_", "-")
@@ -118,14 +297,14 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.demodulize("Dry::Inflector")
+      iex> Drops.Inflector.demodulize("Drops::Inflector")
       "Inflector"
 
       iex> Drops.Inflector.demodulize("String")
       "String"
   """
-  @spec demodulize(String.t() | atom()) :: String.t()
-  def demodulize(input) do
+  @spec demodulize(String.t() | atom(), keyword()) :: String.t()
+  def demodulize(input, _opts \\ []) do
     input
     |> to_string()
     |> String.split("::")
@@ -137,14 +316,14 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.humanize("dry_inflector")
-      "Dry inflector"
+      iex> Drops.Inflector.humanize("drops_inflector")
+      "Drops inflector"
 
       iex> Drops.Inflector.humanize("author_id")
       "Author"
   """
-  @spec humanize(String.t() | atom()) :: String.t()
-  def humanize(input) do
+  @spec humanize(String.t() | atom(), keyword()) :: String.t()
+  def humanize(input, _opts \\ []) do
     input = to_string(input)
 
     # Apply human rules first (when we have them)
@@ -185,11 +364,11 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.foreign_key("Admin::User")
       "user_id"
   """
-  @spec foreign_key(String.t() | atom()) :: String.t()
-  def foreign_key(input) do
+  @spec foreign_key(String.t() | atom(), keyword()) :: String.t()
+  def foreign_key(input, opts \\ []) do
     input
-    |> demodulize()
-    |> underscore()
+    |> demodulize(opts)
+    |> underscore(opts)
     |> Kernel.<>("_id")
   end
 
@@ -213,8 +392,8 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.ordinalize(23)
       "23rd"
   """
-  @spec ordinalize(integer()) :: String.t()
-  def ordinalize(number) when is_integer(number) do
+  @spec ordinalize(integer(), keyword()) :: String.t()
+  def ordinalize(number, _opts \\ []) when is_integer(number) do
     abs_value = abs(number)
 
     cond do
@@ -246,14 +425,15 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.pluralize("money")
       "money"
   """
-  @spec pluralize(String.t() | atom()) :: String.t()
-  def pluralize(input) do
+  @spec pluralize(String.t() | atom(), keyword()) :: String.t()
+  def pluralize(input, opts \\ []) do
     input = to_string(input)
+    inflections = Keyword.get(opts, :inflections, inflections())
 
-    if uncountable?(input) do
+    if uncountable?(input, opts) do
       input
     else
-      inflections().plurals
+      inflections.plurals
       |> Drops.Inflector.Rules.apply_to(input)
     end
   end
@@ -269,14 +449,15 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.singularize("money")
       "money"
   """
-  @spec singularize(String.t() | atom()) :: String.t()
-  def singularize(input) do
+  @spec singularize(String.t() | atom(), keyword()) :: String.t()
+  def singularize(input, opts \\ []) do
     input = to_string(input)
+    inflections = Keyword.get(opts, :inflections, inflections())
 
-    if uncountable?(input) do
+    if uncountable?(input, opts) do
       input
     else
-      inflections().singulars
+      inflections.singulars
       |> Drops.Inflector.Rules.apply_to(input)
     end
   end
@@ -292,13 +473,13 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.tableize("Admin::User")
       "admin_users"
   """
-  @spec tableize(String.t() | atom()) :: String.t()
-  def tableize(input) do
+  @spec tableize(String.t() | atom(), keyword()) :: String.t()
+  def tableize(input, opts \\ []) do
     input
     |> to_string()
     |> String.replace("::", "_")
-    |> underscore()
-    |> pluralize()
+    |> underscore(opts)
+    |> pluralize(opts)
   end
 
   @doc """
@@ -306,14 +487,14 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.underscore("dry-inflector")
-      "dry_inflector"
+      iex> Drops.Inflector.underscore("drops-inflector")
+      "drops_inflector"
 
       iex> Drops.Inflector.underscore("DataMapper")
       "data_mapper"
   """
-  @spec underscore(String.t() | atom()) :: String.t()
-  def underscore(input) do
+  @spec underscore(String.t() | atom(), keyword()) :: String.t()
+  def underscore(input, _opts \\ []) do
     input = to_string(input)
 
     # Replace :: with /
@@ -346,23 +527,25 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.uncountable?("book")
       false
   """
-  @spec uncountable?(String.t()) :: boolean()
-  def uncountable?(input) when is_binary(input) do
+  @spec uncountable?(String.t(), keyword()) :: boolean()
+  def uncountable?(input, opts \\ []) when is_binary(input) do
+    inflections = Keyword.get(opts, :inflections, inflections())
+
     # Check if input is only whitespace
     # Check if it's in the uncountables set
     # Check if the last word (after underscore or word boundary) is uncountable
     String.match?(input, ~r/\A[[:space:]]*\z/) ||
-      MapSet.member?(inflections().uncountables, String.downcase(input)) ||
+      MapSet.member?(inflections.uncountables, String.downcase(input)) ||
       input
       |> String.split(~r/_|\b/)
       |> List.last()
       |> String.downcase()
-      |> then(&MapSet.member?(inflections().uncountables, &1))
+      |> then(&MapSet.member?(inflections.uncountables, &1))
   end
 
   # Private helper functions
 
-  defp internal_camelize(input, upper) do
+  defp internal_camelize(input, upper, _inflections) do
     # First handle path separators
     input = String.replace(input, "/", "::")
 
