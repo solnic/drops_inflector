@@ -1,4 +1,8 @@
-# Drops.Inflector
+# Elixir Drops 💦
+
+[![CI](https://github.com/solnic/drops/actions/workflows/ci.yml/badge.svg)](https://github.com/solnic/drops_inflector/actions/workflows/ci.yml) [![Hex pm](https://img.shields.io/hexpm/v/drops_inflector.svg?style=flat)](https://hex.pm/packages/drops_inflector) [![hex.pm downloads](https://img.shields.io/hexpm/dt/drops.svg?style=flat)](https://hex.pm/packages/drops_inflector)
+
+## Inflector
 
 Inflection utils for Elixir.
 
