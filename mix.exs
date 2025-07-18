@@ -1,13 +1,44 @@
 defmodule Drops.Inflector.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/solnic/drops_inflector"
+  @version "0.1.0"
+  @license "LGPL-3.0-or-later"
+
   def project do
     [
       app: :drops_inflector,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.18",
+      elixirc_options: [warnings_as_errors: false],
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      licenses: [@license],
+      description: ~S"""
+      Inflection library for Elixir.
+      """,
+      links: %{"GitHub" => @source_url},
+      package: package(),
+      docs: docs(),
+      source_url: @source_url,
+      consolidate_protocols: Mix.env() == :prod,
+      elixir_paths: elixir_paths(Mix.env()),
+      test_coverage: [tool: ExCoveralls],
+      aliases: aliases()
+    ]
+  end
+
+  def elixir_paths(_) do
+    ["lib"]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        "test.coverage": :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test
+      ]
     ]
   end
 
@@ -18,11 +49,42 @@ defmodule Drops.Inflector.MixProject do
     ]
   end
 
+  defp package() do
+    [
+      name: "drops_inflector",
+      files: ~w(lib/drops/inflector .formatter.exs mix.exs README* LICENSE CHANGELOG.md),
+      licenses: [@license],
+      links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    ]
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18", only: [:dev, :test]},
+      {:doctor, "~> 0.21.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+    ]
+  end
+
+  # Mix aliases for common tasks
+  defp aliases do
+    [
+      "test.coverage": ["coveralls.json"]
     ]
   end
 end
