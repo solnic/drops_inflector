@@ -204,7 +204,7 @@ defmodule Drops.Inflector do
       "dataMapper"
 
       iex> Drops.Inflector.camelize_lower("drops/inflector")
-      "drops::Inflector"
+      "drops.Inflector"
   """
   @spec camelize_lower(String.t() | atom(), keyword()) :: String.t()
   def camelize_lower(input, opts \\ []) do
@@ -221,7 +221,7 @@ defmodule Drops.Inflector do
       "DataMapper"
 
       iex> Drops.Inflector.camelize_upper("drops/inflector")
-      "Drops::Inflector"
+      "Drops.Inflector"
   """
   @spec camelize_upper(String.t() | atom(), keyword()) :: String.t()
   def camelize_upper(input, opts \\ []) do
@@ -251,7 +251,7 @@ defmodule Drops.Inflector do
     # constantize doesn't use inflections, but we keep the interface consistent
     input
     |> to_string()
-    |> String.split("::")
+    |> String.split(".")
     |> Enum.map(&String.to_existing_atom/1)
     |> Module.concat()
   end
@@ -297,7 +297,7 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.demodulize("Drops::Inflector")
+      iex> Drops.Inflector.demodulize("Drops.Inflector")
       "Inflector"
 
       iex> Drops.Inflector.demodulize("String")
@@ -307,7 +307,7 @@ defmodule Drops.Inflector do
   def demodulize(input, _opts \\ []) do
     input
     |> to_string()
-    |> String.split("::")
+    |> String.split(".")
     |> List.last()
   end
 
@@ -361,7 +361,7 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.foreign_key("Message")
       "message_id"
 
-      iex> Drops.Inflector.foreign_key("Admin::User")
+      iex> Drops.Inflector.foreign_key("Admin.User")
       "user_id"
   """
   @spec foreign_key(String.t() | atom(), keyword()) :: String.t()
@@ -470,14 +470,14 @@ defmodule Drops.Inflector do
       iex> Drops.Inflector.tableize("Book")
       "books"
 
-      iex> Drops.Inflector.tableize("Admin::User")
+      iex> Drops.Inflector.tableize("Admin.User")
       "admin_users"
   """
   @spec tableize(String.t() | atom(), keyword()) :: String.t()
   def tableize(input, opts \\ []) do
     input
     |> to_string()
-    |> String.replace("::", "_")
+    |> String.replace(".", "_")
     |> underscore(opts)
     |> pluralize(opts)
   end
@@ -498,7 +498,7 @@ defmodule Drops.Inflector do
     input = to_string(input)
 
     # Replace :: with /
-    input = String.replace(input, "::", "/")
+    input = String.replace(input, ".", "/")
 
     # Apply acronym transformations (when we have them)
     # For now, just do basic underscore transformation
@@ -547,10 +547,10 @@ defmodule Drops.Inflector do
 
   defp internal_camelize(input, upper, _inflections) do
     # First handle path separators
-    input = String.replace(input, "/", "::")
+    input = String.replace(input, "/", ".")
 
-    # Split by :: to handle each module part separately
-    parts = String.split(input, "::")
+    # Split by "." to handle each module part separately
+    parts = String.split(input, ".")
 
     camelized_parts =
       Enum.with_index(parts, fn part, index ->
@@ -570,13 +570,10 @@ defmodule Drops.Inflector do
 
             rest_parts = Enum.map(rest, &String.capitalize/1)
             Enum.join([first_part | rest_parts])
-
-          [] ->
-            part
         end
       end)
 
-    Enum.join(camelized_parts, "::")
+    Enum.join(camelized_parts, ".")
   end
 end
 

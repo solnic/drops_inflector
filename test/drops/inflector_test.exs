@@ -16,7 +16,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles paths" do
-      assert Inflector.camelize_lower("drops/inflector") == "drops::Inflector"
+      assert Inflector.camelize_lower("drops/inflector") == "drops.Inflector"
     end
 
     test "accepts atoms" do
@@ -36,7 +36,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles paths" do
-      assert Inflector.camelize_upper("drops/inflector") == "Drops::Inflector"
+      assert Inflector.camelize_upper("drops/inflector") == "Drops.Inflector"
     end
 
     test "accepts atoms" do
@@ -57,7 +57,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles nested modules" do
-      assert Inflector.constantize("Drops::Inflector") == Drops.Inflector
+      assert Inflector.constantize("Drops.Inflector") == Drops.Inflector
     end
 
     test "accepts atoms" do
@@ -94,13 +94,13 @@ defmodule Drops.InflectorTest do
 
   describe "demodulize/1" do
     test "extracts the last part of a module name" do
-      assert Inflector.demodulize("Drops::Inflector") == "Inflector"
+      assert Inflector.demodulize("Drops.Inflector") == "Inflector"
       assert Inflector.demodulize("String") == "String"
-      assert Inflector.demodulize("Admin::User") == "User"
+      assert Inflector.demodulize("Admin.User") == "User"
     end
 
     test "accepts atoms" do
-      assert Inflector.demodulize(:"Drops::Inflector") == "Inflector"
+      assert Inflector.demodulize(:"Drops.Inflector") == "Inflector"
     end
   end
 
@@ -127,7 +127,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles nested modules" do
-      assert Inflector.foreign_key("Admin::User") == "user_id"
+      assert Inflector.foreign_key("Admin.User") == "user_id"
     end
 
     test "accepts atoms" do
@@ -229,7 +229,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles nested modules" do
-      assert Inflector.tableize("Admin::User") == "admin_users"
+      assert Inflector.tableize("Admin.User") == "admin_users"
     end
 
     test "accepts atoms" do
@@ -249,7 +249,7 @@ defmodule Drops.InflectorTest do
     end
 
     test "handles paths" do
-      assert Inflector.underscore("Drops::Inflector") == "drops/inflector"
+      assert Inflector.underscore("Drops.Inflector") == "drops/inflector"
     end
 
     test "accepts atoms" do
