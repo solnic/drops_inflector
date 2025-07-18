@@ -64,6 +64,8 @@ defmodule Drops.Inflector do
 
   alias Drops.Inflector.Inflections
 
+  require Inflections
+
   # Constants for ordinalization
   @ordinalize_th %{11 => true, 12 => true, 13 => true}
   @default_separator " "
