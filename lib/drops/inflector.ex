@@ -68,9 +68,18 @@ defmodule Drops.Inflector do
   @ordinalize_th %{11 => true, 12 => true, 13 => true}
   @default_separator " "
 
-  # Get default inflections instance
-  defp inflections do
-    Inflections.new()
+  @on_load :setup_inflections
+
+  def get_inflections(module \\ __MODULE__) do
+    :persistent_term.get({module, :inflections})
+  end
+
+  def put_inflections(module, inflections) do
+    :persistent_term.put({module, :inflections}, inflections)
+  end
+
+  def setup_inflections do
+    put_inflections(__MODULE__, Inflections.new())
   end
 
   @doc """
@@ -99,115 +108,74 @@ defmodule Drops.Inflector do
   """
   defmacro __using__(opts) do
     quote do
-      @inflections_config unquote(opts)
+      import Drops.Inflector, only: [put_inflections: 2, get_inflections: 1]
 
-      # Build custom inflections at runtime with caching
-      defp custom_inflections do
-        case Process.get({__MODULE__, :custom_inflections}) do
-          nil ->
-            inflections = Drops.Inflector.build_custom_inflections(@inflections_config)
-            Process.put({__MODULE__, :custom_inflections}, inflections)
-            inflections
+      @on_load :setup_inflections
 
-          cached_inflections ->
-            cached_inflections
-        end
+      def setup_inflections do
+        put_inflections(__MODULE__, Inflections.new(unquote(opts)))
       end
 
-      # Define all public functions that delegate to Drops.Inflector with custom inflections
       def camelize_lower(input) do
-        Drops.Inflector.camelize_lower(input, inflections: custom_inflections())
+        Drops.Inflector.camelize_lower(input, inflections: get_inflections(__MODULE__))
       end
 
       def camelize_upper(input) do
-        Drops.Inflector.camelize_upper(input, inflections: custom_inflections())
+        Drops.Inflector.camelize_upper(input, inflections: get_inflections(__MODULE__))
       end
 
       def camelize(input) do
-        Drops.Inflector.camelize(input, inflections: custom_inflections())
+        Drops.Inflector.camelize(input, inflections: get_inflections(__MODULE__))
       end
 
       def modulize(input) do
-        Drops.Inflector.modulize(input, inflections: custom_inflections())
+        Drops.Inflector.modulize(input, inflections: get_inflections(__MODULE__))
       end
 
       def classify(input) do
-        Drops.Inflector.classify(input, inflections: custom_inflections())
+        Drops.Inflector.classify(input, inflections: get_inflections(__MODULE__))
       end
 
       def dasherize(input) do
-        Drops.Inflector.dasherize(input, inflections: custom_inflections())
+        Drops.Inflector.dasherize(input, inflections: get_inflections(__MODULE__))
       end
 
       def demodulize(input) do
-        Drops.Inflector.demodulize(input, inflections: custom_inflections())
+        Drops.Inflector.demodulize(input, inflections: get_inflections(__MODULE__))
       end
 
       def humanize(input) do
-        Drops.Inflector.humanize(input, inflections: custom_inflections())
+        Drops.Inflector.humanize(input, inflections: get_inflections(__MODULE__))
       end
 
       def foreign_key(input) do
-        Drops.Inflector.foreign_key(input, inflections: custom_inflections())
+        Drops.Inflector.foreign_key(input, inflections: get_inflections(__MODULE__))
       end
 
       def ordinalize(number) do
-        Drops.Inflector.ordinalize(number, inflections: custom_inflections())
+        Drops.Inflector.ordinalize(number, inflections: get_inflections(__MODULE__))
       end
 
       def pluralize(input) do
-        Drops.Inflector.pluralize(input, inflections: custom_inflections())
+        Drops.Inflector.pluralize(input, inflections: get_inflections(__MODULE__))
       end
 
       def singularize(input) do
-        Drops.Inflector.singularize(input, inflections: custom_inflections())
+        Drops.Inflector.singularize(input, inflections: get_inflections(__MODULE__))
       end
 
       def tableize(input) do
-        Drops.Inflector.tableize(input, inflections: custom_inflections())
+        Drops.Inflector.tableize(input, inflections: get_inflections(__MODULE__))
       end
 
       def underscore(input) do
-        Drops.Inflector.underscore(input, inflections: custom_inflections())
+        Drops.Inflector.underscore(input, inflections: get_inflections(__MODULE__))
       end
 
       def uncountable?(input) do
-        Drops.Inflector.uncountable?(input, inflections: custom_inflections())
+        Drops.Inflector.uncountable?(input, inflections: get_inflections(__MODULE__))
       end
     end
-  end
-
-  @doc """
-  Builds custom inflections from configuration options.
-  """
-  def build_custom_inflections(opts) do
-    inflections = Inflections.new()
-
-    inflections
-    |> apply_custom_plurals(Keyword.get(opts, :plural, []))
-    |> apply_custom_singulars(Keyword.get(opts, :singular, []))
-    |> apply_custom_uncountables(Keyword.get(opts, :uncountable, []))
-    |> apply_custom_acronyms(Keyword.get(opts, :acronyms, []))
-  end
-
-  defp apply_custom_plurals(inflections, plurals) do
-    Enum.reduce(plurals, inflections, fn {singular, plural}, acc ->
-      Inflections.plural(acc, singular, plural)
-    end)
-  end
-
-  defp apply_custom_singulars(inflections, singulars) do
-    Enum.reduce(singulars, inflections, fn {plural, singular}, acc ->
-      Inflections.singular(acc, plural, singular)
-    end)
-  end
-
-  defp apply_custom_uncountables(inflections, uncountables) do
-    Inflections.uncountable(inflections, uncountables)
-  end
-
-  defp apply_custom_acronyms(inflections, acronyms) do
-    Inflections.acronym(inflections, acronyms)
   end
 
   @doc """
@@ -223,7 +191,7 @@ defmodule Drops.Inflector do
   """
   @spec camelize_lower(String.t() | atom(), keyword()) :: String.t()
   def camelize_lower(input, opts \\ []) do
-    inflections = Keyword.get(opts, :inflections, inflections())
+    inflections = Keyword.get(opts, :inflections, get_inflections())
     internal_camelize(to_string(input), false, inflections)
   end
 
@@ -240,7 +208,7 @@ defmodule Drops.Inflector do
   """
   @spec camelize_upper(String.t() | atom(), keyword()) :: String.t()
   def camelize_upper(input, opts \\ []) do
-    inflections = Keyword.get(opts, :inflections, inflections())
+    inflections = Keyword.get(opts, :inflections, get_inflections())
     internal_camelize(to_string(input), true, inflections)
   end
 
@@ -443,7 +411,7 @@ defmodule Drops.Inflector do
   @spec pluralize(String.t() | atom(), keyword()) :: String.t()
   def pluralize(input, opts \\ []) do
     input = to_string(input)
-    inflections = Keyword.get(opts, :inflections, inflections())
+    inflections = Keyword.get(opts, :inflections, get_inflections())
 
     if uncountable?(input, opts) do
       input
@@ -467,7 +435,7 @@ defmodule Drops.Inflector do
   @spec singularize(String.t() | atom(), keyword()) :: String.t()
   def singularize(input, opts \\ []) do
     input = to_string(input)
-    inflections = Keyword.get(opts, :inflections, inflections())
+    inflections = Keyword.get(opts, :inflections, get_inflections())
 
     if uncountable?(input, opts) do
       input
@@ -544,7 +512,7 @@ defmodule Drops.Inflector do
   """
   @spec uncountable?(String.t(), keyword()) :: boolean()
   def uncountable?(input, opts \\ []) when is_binary(input) do
-    inflections = Keyword.get(opts, :inflections, inflections())
+    inflections = Keyword.get(opts, :inflections, get_inflections())
 
     # Check if input is only whitespace
     # Check if it's in the uncountables set
@@ -602,400 +570,5 @@ defmodule Drops.Inflector do
       end)
 
     Enum.join(camelized_parts, ".")
-  end
-end
-
-defmodule Drops.Inflector.Rules do
-  @moduledoc """
-  A set of inflection rules that can be applied to words.
-
-  This module manages a list of rules (patterns and replacements) that are
-  applied in order until one matches and transforms the input word.
-  """
-
-  defstruct rules: []
-
-  @type rule :: {Regex.t() | String.t(), String.t()}
-  @type t :: %__MODULE__{rules: [rule()]}
-
-  @doc """
-  Creates a new empty Rules struct.
-  """
-  @spec new() :: t()
-  def new do
-    %__MODULE__{}
-  end
-
-  @doc """
-  Applies the rules to a word, returning the transformed word.
-
-  Rules are applied in order until one matches and transforms the word.
-  If no rules match, the original word is returned.
-  """
-  @spec apply_to(t(), String.t()) :: String.t()
-  def apply_to(%__MODULE__{rules: rules}, word) do
-    apply_rules(rules, word)
-  end
-
-  @doc """
-  Inserts a rule at the specified index.
-  """
-  @spec insert(t(), non_neg_integer(), rule()) :: t()
-  def insert(%__MODULE__{rules: rules} = struct, index, rule) do
-    %{struct | rules: List.insert_at(rules, index, rule)}
-  end
-
-  @doc """
-  Iterates over all rules, calling the given function for each rule.
-  """
-  @spec each(t(), (rule() -> any())) :: :ok
-  def each(%__MODULE__{rules: rules}, fun) do
-    Enum.each(rules, fun)
-  end
-
-  # Private helper to apply rules recursively
-  defp apply_rules([], word), do: word
-
-  defp apply_rules([{pattern, replacement} | rest], word) do
-    case apply_rule(word, pattern, replacement) do
-      ^word -> apply_rules(rest, word)
-      transformed -> transformed
-    end
-  end
-
-  # Apply a single rule to a word
-  defp apply_rule(word, pattern, replacement) when is_binary(pattern) do
-    String.replace(word, pattern, replacement, global: false)
-  end
-
-  defp apply_rule(word, %Regex{} = pattern, replacement) do
-    case Regex.replace(pattern, word, replacement, global: false) do
-      ^word -> word
-      result -> result
-    end
-  end
-end
-
-defmodule Drops.Inflector.Acronyms do
-  @moduledoc """
-  A set of acronyms for proper camelization and underscoring.
-
-  This module manages acronym rules that affect how words are transformed
-  during camelization and underscoring operations.
-  """
-
-  defstruct rules: %{}, regex: nil
-
-  @type t :: %__MODULE__{rules: map(), regex: Regex.t()}
-
-  @doc """
-  Creates a new empty Acronyms struct.
-  """
-  @spec new() :: t()
-  def new do
-    %__MODULE__{}
-    |> define_regex_patterns()
-  end
-
-  @doc """
-  Applies acronym rules to a word.
-
-  If the word (lowercased) matches an acronym rule, returns the proper
-  acronym form. Otherwise, capitalizes the word if capitalize is true.
-  """
-  @spec apply_to(t(), String.t(), keyword()) :: String.t()
-  def apply_to(%__MODULE__{rules: rules}, word, opts \\ []) do
-    capitalize = Keyword.get(opts, :capitalize, true)
-
-    case Map.get(rules, String.downcase(word)) do
-      nil -> if capitalize, do: String.capitalize(word), else: word
-      acronym -> acronym
-    end
-  end
-
-  @doc """
-  Adds a new acronym rule.
-  """
-  @spec add(t(), String.t(), String.t()) :: t()
-  def add(%__MODULE__{rules: rules} = struct, rule, replacement) do
-    new_rules = Map.put(rules, rule, replacement)
-
-    %{struct | rules: new_rules}
-    |> define_regex_patterns()
-  end
-
-  @doc """
-  Returns the regex pattern for matching acronyms.
-  """
-  @spec regex(t()) :: Regex.t()
-  def regex(%__MODULE__{regex: regex}), do: regex
-
-  # Private helper to define regex patterns
-  defp define_regex_patterns(%__MODULE__{rules: rules} = struct) do
-    regex =
-      if Enum.empty?(rules) do
-        # Never matches anything
-        ~r/(?=a)b/
-      else
-        values = Map.values(rules)
-        pattern = Enum.join(values, "|")
-        Regex.compile!("(?:(?<=([A-Za-z\\d]))|\\b)(#{pattern})(?=\\b|[^a-z])")
-      end
-
-    %{struct | regex: regex}
-  end
-end
-
-defmodule Drops.Inflector.Inflections do
-  @moduledoc """
-  Inflection rules container.
-
-  This module manages all the inflection rules including plurals, singulars,
-  uncountables, humans, and acronyms.
-  """
-
-  alias Drops.Inflector.{Rules, Acronyms}
-
-  defstruct plurals: nil,
-            singulars: nil,
-            humans: nil,
-            uncountables: nil,
-            acronyms: nil
-
-  @type t :: %__MODULE__{
-          plurals: Rules.t(),
-          singulars: Rules.t(),
-          humans: Rules.t(),
-          uncountables: MapSet.t(),
-          acronyms: Acronyms.t()
-        }
-
-  @doc """
-  Creates a new Inflections struct with default rules.
-  """
-  @spec new() :: t()
-  def new do
-    %__MODULE__{
-      plurals: Rules.new(),
-      singulars: Rules.new(),
-      humans: Rules.new(),
-      uncountables: MapSet.new(),
-      acronyms: Acronyms.new()
-    }
-    |> apply_defaults()
-  end
-
-  @doc """
-  Adds a pluralization rule.
-  """
-  @spec plural(t(), String.t() | Regex.t(), String.t()) :: t()
-  def plural(%__MODULE__{plurals: plurals} = struct, rule, replacement) do
-    new_plurals = Rules.insert(plurals, 0, {rule, replacement})
-    %{struct | plurals: new_plurals}
-  end
-
-  @doc """
-  Adds a singularization rule.
-  """
-  @spec singular(t(), String.t() | Regex.t(), String.t()) :: t()
-  def singular(%__MODULE__{singulars: singulars} = struct, rule, replacement) do
-    new_singulars = Rules.insert(singulars, 0, {rule, replacement})
-    %{struct | singulars: new_singulars}
-  end
-
-  @doc """
-  Adds an irregular inflection (both plural and singular).
-  """
-  @spec irregular(t(), String.t(), String.t()) :: t()
-  def irregular(%__MODULE__{} = struct, singular_word, plural_word) do
-    # Remove from uncountables
-    struct = remove_uncountable(struct, singular_word)
-    struct = remove_uncountable(struct, plural_word)
-
-    # Add irregular rules
-    struct = add_irregular(struct, singular_word, plural_word, :plurals)
-    add_irregular(struct, plural_word, singular_word, :singulars)
-  end
-
-  @doc """
-  Adds uncountable words.
-  """
-  @spec uncountable(t(), [String.t()] | String.t()) :: t()
-  def uncountable(%__MODULE__{uncountables: uncountables} = struct, words) when is_list(words) do
-    new_uncountables = Enum.reduce(words, uncountables, &MapSet.put(&2, &1))
-    %{struct | uncountables: new_uncountables}
-  end
-
-  def uncountable(%__MODULE__{} = struct, word) when is_binary(word) do
-    uncountable(struct, [word])
-  end
-
-  @doc """
-  Adds acronym rules.
-  """
-  @spec acronym(t(), [String.t()] | String.t()) :: t()
-  def acronym(%__MODULE__{acronyms: acronyms} = struct, words) when is_list(words) do
-    new_acronyms =
-      Enum.reduce(words, acronyms, fn word, acc ->
-        Acronyms.add(acc, String.downcase(word), word)
-      end)
-
-    %{struct | acronyms: new_acronyms}
-  end
-
-  def acronym(%__MODULE__{} = struct, word) when is_binary(word) do
-    acronym(struct, [word])
-  end
-
-  @doc """
-  Adds a human rule.
-  """
-  @spec human(t(), String.t() | Regex.t(), String.t()) :: t()
-  def human(%__MODULE__{humans: humans} = struct, rule, replacement) do
-    new_humans = Rules.insert(humans, 0, {rule, replacement})
-    %{struct | humans: new_humans}
-  end
-
-  # Private helpers
-
-  defp remove_uncountable(%__MODULE__{uncountables: uncountables} = struct, word) do
-    new_uncountables = MapSet.delete(uncountables, word)
-    %{struct | uncountables: new_uncountables}
-  end
-
-  defp add_irregular(%__MODULE__{} = struct, rule, replacement, target) do
-    [head | tail] = String.graphemes(rule)
-    tail_str = Enum.join(tail)
-    pattern = Regex.compile!("(#{head})#{Regex.escape(tail_str)}$", "i")
-    replacement_str = "\\1#{String.slice(replacement, 1..-1//1)}"
-
-    case target do
-      :plurals ->
-        new_plurals = Rules.insert(struct.plurals, 0, {pattern, replacement_str})
-        %{struct | plurals: new_plurals}
-
-      :singulars ->
-        new_singulars = Rules.insert(struct.singulars, 0, {pattern, replacement_str})
-        %{struct | singulars: new_singulars}
-    end
-  end
-
-  # Apply default inflection rules
-  defp apply_defaults(struct) do
-    struct
-    |> apply_plural_defaults()
-    |> apply_singular_defaults()
-    |> apply_irregular_defaults()
-    |> apply_uncountable_defaults()
-    |> apply_acronym_defaults()
-  end
-
-  defp apply_plural_defaults(struct) do
-    struct
-    |> plural(~r/\z/, "s")
-    |> plural(~r/s\z/i, "s")
-    |> plural(~r/(ax|test)is\z/i, "\\1es")
-    |> plural(~r/(.*)us\z/i, "\\1uses")
-    |> plural(~r/(octop|vir|cact)us\z/i, "\\1i")
-    |> plural(~r/(octop|vir)i\z/i, "\\1i")
-    |> plural(~r/(alias|status)\z/i, "\\1es")
-    |> plural(~r/(buffal|domin|ech|embarg|her|mosquit|potat|tomat)o\z/i, "\\1oes")
-    |> plural(~r/(?<!b)um\z/i, "\\1a")
-    |> plural(~r/([ti])a\z/i, "\\1a")
-    |> plural(~r/sis\z/i, "ses")
-    |> plural(~r/(.*)(?:([^f]))fe*\z/i, "\\1\\2ves")
-    |> plural(~r/(hive|proof)\z/i, "\\1s")
-    |> plural(~r/([^aeiouy]|qu)y\z/i, "\\1ies")
-    |> plural(~r/(x|ch|ss|sh)\z/i, "\\1es")
-    |> plural(~r/(stoma|epo)ch\z/i, "\\1chs")
-    |> plural(~r/(matr|vert|ind)(?:ix|ex)\z/i, "\\1ices")
-    |> plural(~r/([m|l])ouse\z/i, "\\1ice")
-    |> plural(~r/([m|l])ice\z/i, "\\1ice")
-    |> plural(~r/^(ox)\z/i, "\\1en")
-    |> plural(~r/^(oxen)\z/i, "\\1")
-    |> plural(~r/(quiz)\z/i, "\\1zes")
-    |> plural(~r/(.*)non\z/i, "\\1na")
-    |> plural(~r/(.*)ma\z/i, "\\1mata")
-    |> plural(~r/(.*)(eau|eaux)\z/, "\\1eaux")
-  end
-
-  defp apply_singular_defaults(struct) do
-    struct
-    |> singular(~r/s\z/i, "")
-    |> singular(~r/(n)ews\z/i, "\\1ews")
-    |> singular(~r/([ti])a\z/i, "\\1um")
-    |> singular(
-      ~r/(analy|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(sis|ses)\z/i,
-      "\\1\\2sis"
-    )
-    |> singular(~r/(^analy)(sis|ses)\z/i, "\\1sis")
-    |> singular(~r/([^f])ves\z/i, "\\1fe")
-    |> singular(~r/(hive)s\z/i, "\\1")
-    |> singular(~r/(tive)s\z/i, "\\1")
-    |> singular(~r/([lr])ves\z/i, "\\1f")
-    |> singular(~r/([^aeiouy]|qu)ies\z/i, "\\1y")
-    |> singular(~r/(s)eries\z/i, "\\1eries")
-    |> singular(~r/(m)ovies\z/i, "\\1ovie")
-    |> singular(~r/(ss)\z/i, "\\1")
-    |> singular(~r/(x|ch|ss|sh)es\z/i, "\\1")
-    |> singular(~r/([m|l])ice\z/i, "\\1ouse")
-    |> singular(~r/(us)(es)?\z/i, "\\1")
-    |> singular(~r/(o)es\z/i, "\\1")
-    |> singular(~r/(shoe)s\z/i, "\\1")
-    |> singular(~r/(cris|ax|test)(is|es)\z/i, "\\1is")
-    |> singular(~r/(octop|vir)(us|i)\z/i, "\\1us")
-    |> singular(~r/(alias|status)(es)?\z/i, "\\1")
-    |> singular(~r/(ox)en/i, "\\1")
-    |> singular(~r/(vert|ind)ices\z/i, "\\1ex")
-    |> singular(~r/(matr)ices\z/i, "\\1ix")
-    |> singular(~r/(quiz)zes\z/i, "\\1")
-    |> singular(~r/(database)s\z/i, "\\1")
-  end
-
-  defp apply_irregular_defaults(struct) do
-    struct
-    |> irregular("person", "people")
-    |> irregular("man", "men")
-    |> irregular("human", "humans")
-    |> irregular("child", "children")
-    |> irregular("sex", "sexes")
-    |> irregular("foot", "feet")
-    |> irregular("tooth", "teeth")
-    |> irregular("goose", "geese")
-    |> irregular("forum", "forums")
-  end
-
-  defp apply_uncountable_defaults(struct) do
-    uncountable(struct, [
-      "hovercraft",
-      "moose",
-      "deer",
-      "milk",
-      "rain",
-      "Swiss",
-      "grass",
-      "equipment",
-      "information",
-      "rice",
-      "money",
-      "species",
-      "series",
-      "fish",
-      "sheep",
-      "jeans"
-    ])
-  end
-
-  defp apply_acronym_defaults(struct) do
-    acronym(struct, [
-      "API",
-      "CSRF",
-      "CSV",
-      "DB",
-      "HMAC",
-      "HTTP",
-      "JSON",
-      "OpenSSL"
-    ])
   end
 end
