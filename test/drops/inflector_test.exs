@@ -257,6 +257,20 @@ defmodule Drops.InflectorTest do
     end
   end
 
+  describe "acronyms" do
+    test "default acronyms work in camelization" do
+      assert Inflector.camelize("api_access") == "APIAccess"
+      assert Inflector.camelize("json_data") == "JSONData"
+      assert Inflector.camelize("http_request") == "HTTPRequest"
+    end
+
+    test "default acronyms work in lower camelization" do
+      assert Inflector.camelize_lower("api_access") == "apiAccess"
+      assert Inflector.camelize_lower("json_data") == "jsonData"
+      assert Inflector.camelize_lower("http_request") == "httpRequest"
+    end
+  end
+
   describe "uncountable?/1" do
     test "returns true for uncountable words" do
       assert Inflector.uncountable?("money") == true

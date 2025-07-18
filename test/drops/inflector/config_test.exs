@@ -118,6 +118,30 @@ defmodule Drops.Inflector.ConfigTest do
     end
   end
 
+  describe "acronym configuration" do
+    defmodule AcronymInflector do
+      use Drops.Inflector,
+        acronyms: ["API", "XML", "HTML"]
+    end
+
+    test "respects custom acronym configuration in camelization" do
+      assert AcronymInflector.camelize("api_access") == "APIAccess"
+      assert AcronymInflector.camelize("xml_parser") == "XMLParser"
+      assert AcronymInflector.camelize("html_content") == "HTMLContent"
+    end
+
+    test "respects custom acronym configuration in lower camelization" do
+      assert AcronymInflector.camelize_lower("api_access") == "apiAccess"
+      assert AcronymInflector.camelize_lower("xml_parser") == "xmlParser"
+      assert AcronymInflector.camelize_lower("html_content") == "htmlContent"
+    end
+
+    test "non-acronym words are handled normally" do
+      assert AcronymInflector.camelize("user_name") == "UserName"
+      assert AcronymInflector.camelize_lower("user_name") == "userName"
+    end
+  end
+
   describe "edge cases and internal functions" do
     test "camelization handles empty parts" do
       assert Drops.Inflector.camelize_lower("") == ""

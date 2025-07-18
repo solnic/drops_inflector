@@ -24,12 +24,18 @@ defmodule Drops.Inflector do
           uncountable: [
             "drops-inflector",
             "equipment"
+          ],
+          acronyms: [
+            "API",
+            "XML",
+            "HTML"
           ]
       end
 
       MyInflector.pluralize("virus")     # => "viruses"
       MyInflector.singularize("thieves") # => "thief"
       MyInflector.uncountable?("equipment") # => true
+      MyInflector.camelize("api_access")  # => "APIAccess"
 
   Custom inflectors have all the same functions as the main `Drops.Inflector` module,
   but use your custom rules in addition to the default rules. Custom rules take
@@ -82,10 +88,14 @@ defmodule Drops.Inflector do
           ],
           uncountable: [
             "drops-inflector"
+          ],
+          acronyms: [
+            "API"
           ]
       end
 
       MyInflector.pluralize("virus") # => "viruses"
+      MyInflector.camelize("api_access") # => "APIAccess"
   """
   defmacro __using__(opts) do
     quote do
@@ -177,6 +187,7 @@ defmodule Drops.Inflector do
     |> apply_custom_plurals(Keyword.get(opts, :plural, []))
     |> apply_custom_singulars(Keyword.get(opts, :singular, []))
     |> apply_custom_uncountables(Keyword.get(opts, :uncountable, []))
+    |> apply_custom_acronyms(Keyword.get(opts, :acronyms, []))
   end
 
   defp apply_custom_plurals(inflections, plurals) do
@@ -193,6 +204,10 @@ defmodule Drops.Inflector do
 
   defp apply_custom_uncountables(inflections, uncountables) do
     Inflections.uncountable(inflections, uncountables)
+  end
+
+  defp apply_custom_acronyms(inflections, acronyms) do
+    Inflections.acronym(inflections, acronyms)
   end
 
   @doc """
@@ -545,7 +560,7 @@ defmodule Drops.Inflector do
 
   # Private helper functions
 
-  defp internal_camelize(input, upper, _inflections) do
+  defp internal_camelize(input, upper, inflections) do
     # First handle path separators
     input = String.replace(input, "/", ".")
 
@@ -563,12 +578,25 @@ defmodule Drops.Inflector do
             # For subsequent module parts, always capitalize
             should_capitalize_first = upper || index > 0
 
+            # Apply acronym rules to the first part
             first_part =
-              if should_capitalize_first,
-                do: String.capitalize(first),
-                else: String.downcase(first)
+              if should_capitalize_first do
+                Drops.Inflector.Acronyms.apply_to(inflections.acronyms, first, capitalize: true)
+              else
+                # For lower camelCase, check if it's an acronym but keep it lowercase if it's the first word
+                case Map.get(inflections.acronyms.rules, String.downcase(first)) do
+                  nil -> String.downcase(first)
+                  # Keep first word lowercase in camelCase
+                  _acronym -> String.downcase(first)
+                end
+              end
 
-            rest_parts = Enum.map(rest, &String.capitalize/1)
+            # Apply acronym rules to the rest of the parts
+            rest_parts =
+              Enum.map(rest, fn word ->
+                Drops.Inflector.Acronyms.apply_to(inflections.acronyms, word, capitalize: true)
+              end)
+
             Enum.join([first_part | rest_parts])
         end
       end)
