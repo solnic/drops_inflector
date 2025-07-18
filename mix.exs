@@ -9,7 +9,7 @@ defmodule Drops.Inflector.MixProject do
     [
       app: :drops_inflector,
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.14",
       elixirc_options: [warnings_as_errors: false],
       start_permanent: Mix.env() == :prod,
       deps: deps(),
