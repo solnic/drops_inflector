@@ -66,7 +66,8 @@ defmodule Drops.Inflector.MixProject do
       extras: [
         "README.md",
         "CHANGELOG.md"
-      ]
+      ],
+      authors: ["Peter Solnica"]
     ]
   end
 
