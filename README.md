@@ -74,6 +74,11 @@ defmodule MyInflector do
     uncountable: [
       "equipment",
       "software"
+    ],
+    acronyms: [
+      "API",
+      "XML",
+      "HTML"
     ]
 end
 
@@ -82,10 +87,31 @@ MyInflector.pluralize("virus")     # => "viruses"
 MyInflector.singularize("thieves") # => "thief"
 MyInflector.uncountable?("equipment") # => true
 
+# Acronyms are properly handled in camelization
+MyInflector.camelize("api_access")     # => "APIAccess"
+MyInflector.camelize_lower("xml_data") # => "xmlData"
+
 # All other functions work the same way
 MyInflector.camelize("data_mapper")    # => "DataMapper"
 MyInflector.tableize("User")           # => "users"
 ```
+
+### Acronym Support
+
+Drops.Inflector includes built-in support for common acronyms like API, JSON, HTTP, etc. You can also define custom acronyms that will be properly handled during camelization:
+
+```elixir
+defmodule APIInflector do
+  use Drops.Inflector,
+    acronyms: ["API", "XML", "HTML", "CSS"]
+end
+
+APIInflector.camelize("api_access")        # => "APIAccess"
+APIInflector.camelize("xml_http_request")  # => "XMLHTTPRequest"
+APIInflector.camelize_lower("html_css")    # => "htmlCSS"
+```
+
+The default inflector already includes these acronyms: API, CSRF, CSV, DB, HMAC, HTTP, JSON, OpenSSL.
 
 ### Multiple Custom Inflectors
 
