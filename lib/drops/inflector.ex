@@ -70,14 +70,17 @@ defmodule Drops.Inflector do
 
   @on_load :setup_inflections
 
+  @doc false
   def get_inflections(module \\ __MODULE__) do
     :persistent_term.get({module, :inflections})
   end
 
+  @doc false
   def put_inflections(module, inflections) do
     :persistent_term.put({module, :inflections}, inflections)
   end
 
+  @doc false
   def setup_inflections do
     put_inflections(__MODULE__, Inflections.new())
   end
