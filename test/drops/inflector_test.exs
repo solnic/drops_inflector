@@ -123,7 +123,11 @@ defmodule Drops.InflectorTest do
   describe "foreign_key/1" do
     test "creates foreign key names" do
       assert Inflector.foreign_key("Message") == "message_id"
+      assert Inflector.foreign_key("Messages") == "message_id"
       assert Inflector.foreign_key("User") == "user_id"
+      assert Inflector.foreign_key("Users") == "user_id"
+      assert Inflector.foreign_key("users") == "user_id"
+      assert Inflector.foreign_key(:users) == "user_id"
     end
 
     test "handles nested modules" do

@@ -351,6 +351,7 @@ defmodule Drops.Inflector do
   def foreign_key(input, opts \\ []) do
     input
     |> demodulize(opts)
+    |> singularize(opts)
     |> underscore(opts)
     |> Kernel.<>("_id")
   end
