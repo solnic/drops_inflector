@@ -42,7 +42,7 @@ defmodule Drops.Inflector.ConfigTest do
       assert Test.Inflector.camelize_lower("data_mapper") == "dataMapper"
       assert Test.Inflector.camelize_upper("data_mapper") == "DataMapper"
       assert Test.Inflector.camelize("data_mapper") == "DataMapper"
-      assert Test.Inflector.constantize("String") == String
+      assert Test.Inflector.modulize("String") == String
       assert Test.Inflector.classify("books") == "Book"
       assert Test.Inflector.dasherize("drops_inflector") == "drops-inflector"
       assert Test.Inflector.demodulize("Drops.Inflector") == "Inflector"

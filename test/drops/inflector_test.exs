@@ -50,18 +50,18 @@ defmodule Drops.InflectorTest do
     end
   end
 
-  describe "constantize/1" do
+  describe "modulize/1" do
     test "converts string to module" do
-      assert Inflector.constantize("String") == String
-      assert Inflector.constantize("Enum") == Enum
+      assert Inflector.modulize("String") == String
+      assert Inflector.modulize("Enum") == Enum
     end
 
     test "handles nested modules" do
-      assert Inflector.constantize("Drops.Inflector") == Drops.Inflector
+      assert Inflector.modulize("Drops.Inflector") == Drops.Inflector
     end
 
     test "accepts atoms" do
-      assert Inflector.constantize(:String) == String
+      assert Inflector.modulize(:String) == String
     end
   end
 

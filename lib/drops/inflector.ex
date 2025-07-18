@@ -42,7 +42,7 @@ defmodule Drops.Inflector do
   - `camelize_lower/1` - Lower camelCase
   - `camelize_upper/1` - Upper CamelCase
   - `camelize/1` - Alias for `camelize_upper/1`
-  - `constantize/1` - Convert string to module constant
+  - `modulize/1` - Convert string to module constant
   - `classify/1` - Convert to class name
   - `dasherize/1` - Convert underscores to dashes
   - `demodulize/1` - Extract last part of module name
@@ -117,8 +117,8 @@ defmodule Drops.Inflector do
         Drops.Inflector.camelize(input, inflections: custom_inflections())
       end
 
-      def constantize(input) do
-        Drops.Inflector.constantize(input, inflections: custom_inflections())
+      def modulize(input) do
+        Drops.Inflector.modulize(input, inflections: custom_inflections())
       end
 
       def classify(input) do
@@ -240,15 +240,15 @@ defmodule Drops.Inflector do
 
   ## Examples
 
-      iex> Drops.Inflector.constantize("String")
+      iex> Drops.Inflector.modulize("String")
       String
 
-      iex> Drops.Inflector.constantize("Enum")
+      iex> Drops.Inflector.modulize("Enum")
       Enum
   """
-  @spec constantize(String.t() | atom(), keyword()) :: module()
-  def constantize(input, _opts \\ []) do
-    # constantize doesn't use inflections, but we keep the interface consistent
+  @spec modulize(String.t() | atom(), keyword()) :: module()
+  def modulize(input, _opts \\ []) do
+    # modulize doesn't use inflections, but we keep the interface consistent
     input
     |> to_string()
     |> String.split(".")
