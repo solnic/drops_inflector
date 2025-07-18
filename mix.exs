@@ -52,7 +52,7 @@ defmodule Drops.Inflector.MixProject do
   defp package() do
     [
       name: "drops_inflector",
-      files: ~w(lib/drops/inflector .formatter.exs mix.exs README* LICENSE CHANGELOG.md),
+      files: ~w(lib/drops .formatter.exs mix.exs README* LICENSE CHANGELOG.md),
       licenses: [@license],
       links: %{"GitHub" => @source_url}
     ]
