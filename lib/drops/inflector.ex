@@ -70,21 +70,19 @@ defmodule Drops.Inflector do
   @ordinalize_th %{11 => true, 12 => true, 13 => true}
   @default_separator " "
 
-  @on_load :setup_inflections
+  @on_load :register
+
+  @doc false
+  def register, do: register(__MODULE__)
+
+  @doc false
+  def register(module, opts \\ []) when is_list(opts) do
+    :persistent_term.put({module, :inflections}, Inflections.new(opts))
+  end
 
   @doc false
   def get_inflections(module \\ __MODULE__) do
     :persistent_term.get({module, :inflections})
-  end
-
-  @doc false
-  def put_inflections(module, inflections) do
-    :persistent_term.put({module, :inflections}, inflections)
-  end
-
-  @doc false
-  def setup_inflections do
-    put_inflections(__MODULE__, Inflections.new())
   end
 
   @doc """
@@ -113,72 +111,77 @@ defmodule Drops.Inflector do
   """
   defmacro __using__(opts) do
     quote do
-      import Drops.Inflector, only: [put_inflections: 2, get_inflections: 1]
+      alias Drops.Inflector
+      alias Drops.Inflector.Inflections
 
-      @on_load :setup_inflections
+      import Drops.Inflector, only: [get_inflections: 1]
 
-      def setup_inflections do
-        put_inflections(__MODULE__, Inflections.new(unquote(opts)))
+      @opts unquote(opts)
+      @on_load :register
+
+      @doc false
+      def register do
+        :persistent_term.put({__MODULE__, :inflections}, Inflections.new(@opts))
       end
 
       def camelize_lower(input) do
-        Drops.Inflector.camelize_lower(input, inflections: get_inflections(__MODULE__))
+        Inflector.camelize_lower(input, inflections: get_inflections(__MODULE__))
       end
 
       def camelize_upper(input) do
-        Drops.Inflector.camelize_upper(input, inflections: get_inflections(__MODULE__))
+        Inflector.camelize_upper(input, inflections: get_inflections(__MODULE__))
       end
 
       def camelize(input) do
-        Drops.Inflector.camelize(input, inflections: get_inflections(__MODULE__))
+        Inflector.camelize(input, inflections: get_inflections(__MODULE__))
       end
 
       def modulize(input) do
-        Drops.Inflector.modulize(input, inflections: get_inflections(__MODULE__))
+        Inflector.modulize(input, inflections: get_inflections(__MODULE__))
       end
 
       def classify(input) do
-        Drops.Inflector.classify(input, inflections: get_inflections(__MODULE__))
+        Inflector.classify(input, inflections: get_inflections(__MODULE__))
       end
 
       def dasherize(input) do
-        Drops.Inflector.dasherize(input, inflections: get_inflections(__MODULE__))
+        Inflector.dasherize(input, inflections: get_inflections(__MODULE__))
       end
 
       def demodulize(input) do
-        Drops.Inflector.demodulize(input, inflections: get_inflections(__MODULE__))
+        Inflector.demodulize(input, inflections: get_inflections(__MODULE__))
       end
 
       def humanize(input) do
-        Drops.Inflector.humanize(input, inflections: get_inflections(__MODULE__))
+        Inflector.humanize(input, inflections: get_inflections(__MODULE__))
       end
 
       def foreign_key(input) do
-        Drops.Inflector.foreign_key(input, inflections: get_inflections(__MODULE__))
+        Inflector.foreign_key(input, inflections: get_inflections(__MODULE__))
       end
 
       def ordinalize(number) do
-        Drops.Inflector.ordinalize(number, inflections: get_inflections(__MODULE__))
+        Inflector.ordinalize(number, inflections: get_inflections(__MODULE__))
       end
 
       def pluralize(input) do
-        Drops.Inflector.pluralize(input, inflections: get_inflections(__MODULE__))
+        Inflector.pluralize(input, inflections: get_inflections(__MODULE__))
       end
 
       def singularize(input) do
-        Drops.Inflector.singularize(input, inflections: get_inflections(__MODULE__))
+        Inflector.singularize(input, inflections: get_inflections(__MODULE__))
       end
 
       def tableize(input) do
-        Drops.Inflector.tableize(input, inflections: get_inflections(__MODULE__))
+        Inflector.tableize(input, inflections: get_inflections(__MODULE__))
       end
 
       def underscore(input) do
-        Drops.Inflector.underscore(input, inflections: get_inflections(__MODULE__))
+        Inflector.underscore(input, inflections: get_inflections(__MODULE__))
       end
 
       def uncountable?(input) do
-        Drops.Inflector.uncountable?(input, inflections: get_inflections(__MODULE__))
+        Inflector.uncountable?(input, inflections: get_inflections(__MODULE__))
       end
     end
   end
